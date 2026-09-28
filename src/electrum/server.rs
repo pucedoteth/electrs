@@ -309,7 +309,7 @@ impl Connection {
             })
             .collect();
 
-        if count == 0 || cp_height == 0 {
+        if headers.is_empty() || cp_height == 0 {
             return Ok(json!({
                 "count": headers.len(),
                 "hex": headers.join(""),
@@ -317,8 +317,9 @@ impl Connection {
             }));
         }
 
-        let (branch, root) =
-            get_header_merkle_proof(self.query.chain(), start_height + (count - 1), cp_height)?;
+        // Prove the last header returned, which is below the requested range if it passes the tip.
+        let last_height = start_height + headers.len() - 1;
+        let (branch, root) = get_header_merkle_proof(self.query.chain(), last_height, cp_height)?;
 
         Ok(json!({
             "count": headers.len(),
